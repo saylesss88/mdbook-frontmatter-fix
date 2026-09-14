@@ -94,7 +94,7 @@ block it injects:
 
 ```yaml
 ---
-title: Chapter Name # from SUMMARY.md
+title: chapter_name # from filename stem in SUMMARY.md  (io/chapter_name.md = chapter_name)
 author: Jr # from git log
 date: 2026-09-03 # from git log
 lang: en # from book.toml language field
@@ -178,7 +178,7 @@ Inject a table of contents into chapters based on their headings:
 
 ```sh
 fmf --toc                            # inject TOC into all chapters
-fmf --toc io/input_output.md        # inject TOC into one chapter
+fmf --toc io/input_output.md         # inject TOC into one chapter
 fmf --toc --dry-run                  # preview without writing
 ```
 
