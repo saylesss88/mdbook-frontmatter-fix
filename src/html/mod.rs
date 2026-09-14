@@ -41,7 +41,9 @@ pub fn check_includes(content: &str, file_dir: &Path) -> Vec<Diagnostic> {
             .strip_prefix("{{#include ")
             .and_then(|s| s.strip_suffix("}}"))
         {
-            let include_path = file_dir.join(inner.trim());
+            // Strip line range suffix: path:N or path:N:M
+            let path = inner.split(':').next().unwrap_or(inner).trim();
+            let include_path = file_dir.join(path);
             if !include_path.exists() {
                 diags.push(Diagnostic {
                     code: "html::broken-include",
@@ -50,7 +52,6 @@ pub fn check_includes(content: &str, file_dir: &Path) -> Vec<Diagnostic> {
             }
         }
     }
-
     diags
 }
 
@@ -163,6 +164,16 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let content = "![logo](img/rust-gaps.png)\n";
         let diags = check_links(content, dir.path());
+        assert!(diags.is_empty());
+    }
+
+    #[test]
+    fn include_with_line_range_is_valid() {
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("style.css");
+        std::fs::write(&file, "body { color: red; }").unwrap();
+        let content = "{{#include style.css:25:29}}\n";
+        let diags = check_includes(content, dir.path());
         assert!(diags.is_empty());
     }
 }
