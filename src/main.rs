@@ -66,7 +66,13 @@ fn has_diag(diags: &[fm::Diagnostic], code: &str) -> bool {
     diags.iter().any(|d| d.code == code)
 }
 
-fn handle_file_command(cli: &Cli, comment_config: &comment::CommentConfig) {
+fn handle_file_command(
+    cli: &Cli,
+    comment_config: &comment::CommentConfig,
+    lang: &str,
+    excluded: &[String],
+    inject_fields: &HashMap<String, String>,
+) {
     let Some(ref file) = cli.file else { return };
     let file = file.trim_start_matches("src/");
     let full_path = format!("src/{file}");
@@ -125,6 +131,17 @@ fn handle_file_command(cli: &Cli, comment_config: &comment::CommentConfig) {
         return;
     }
 
+    if cli.fix {
+        let mut diags = Vec::new();
+        diags.extend(fm::check_frontmatter(&current, excluded));
+        let fix_opts = FixOptions {
+            lang,
+            excluded,
+            inject_fields,
+        };
+        apply_fixes(cli, file, &full_path, &current, &diags, &fix_opts);
+        return;
+    }
     if cli.edit {
         let fm_block = fm::extract_frontmatter(&current).unwrap_or_else(|| {
             eprintln!("error: no frontmatter found in {full_path}");
@@ -211,6 +228,33 @@ fn apply_fixes(
 
     if has_diag(diags, "fm::missing-tags") {
         current = fm::fix_missing_tags(&current, &tags::infer_tags(path));
+    }
+
+    if has_diag(diags, "fm::missing-author") {
+        let abs_path = Path::new(full_path).canonicalize().unwrap_or_default();
+        let commit = git::file_commit_info(&abs_path, "%Y-%m-%d", false)
+            .ok()
+            .flatten();
+        let author = commit.map_or("Unknown".to_string(), |c| c.author.clone());
+        current = overrides::apply_override(&current, "author", &author);
+    }
+
+    if has_diag(diags, "fm::missing-title") {
+        let title = path
+            .trim_end_matches(".md")
+            .split('/')
+            .next_back()
+            .unwrap_or("untitled");
+        current = overrides::apply_override(&current, "title", title);
+    }
+
+    if has_diag(diags, "fm::missing-date") {
+        let abs_path = Path::new(full_path).canonicalize().unwrap_or_default();
+        let commit = git::file_commit_info(&abs_path, "%Y-%m-%d", false)
+            .ok()
+            .flatten();
+        let date = commit.map_or("Unknown".to_string(), |c| c.date.clone());
+        current = overrides::apply_override(&current, "date", &date);
     }
 
     for (key, value) in opts.inject_fields {
@@ -382,7 +426,7 @@ fn main() {
     let comment_config = comment::parse_comment_config(&fmf_content);
 
     if cli.file.is_some() {
-        handle_file_command(&cli, &comment_config);
+        handle_file_command(&cli, &comment_config, &lang, &excluded, &injected_fields);
         return;
     }
 
