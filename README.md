@@ -39,7 +39,9 @@ Run from your book root (where `book.toml` lives).
 fmf                                          # run all checks
 fmf --fm                                     # frontmatter checks only
 fmf --html                                   # HTML structure checks only
+fmf --links                                  # Links checks only
 fmf --fix                                    # auto-fix what can be fixed
+fmf --fix io/input_output.md                 # auto-fix what can be fixed from single file
 fmf --dry-run                                # preview fixes without writing
 fmf --set "title=My Title" io/my-file.md     # override a field in one file
 fmf --tag rust --tag cli io/my-file.md       # set tags on one file
