@@ -89,7 +89,7 @@ fn handle_file_command(cli: &Cli, comment_config: &comment::CommentConfig) {
     if cli.strip {
         let mut current = current;
         if !cli.toc && !cli.comment {
-            current = mdbook_frontmatter_strip::strip_frontmatter(&current).to_string();
+            current = mdbook_frontmatter_strip::strip_frontmatter(&current);
         }
         if cli.toc {
             current = toc::strip_toc(&current);
@@ -237,7 +237,7 @@ fn try_execute_transformations(
         process_paths(paths, cli.dry_run, "strip from", &[], |content| {
             let mut curr = content.to_string();
             if !cli.toc && !cli.comment {
-                curr = mdbook_frontmatter_strip::strip_frontmatter(&curr).to_string();
+                curr = mdbook_frontmatter_strip::strip_frontmatter(&curr);
             }
             if cli.toc {
                 curr = toc::strip_toc(&curr);
