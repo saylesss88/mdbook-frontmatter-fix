@@ -397,7 +397,7 @@ Or as a pre-commit hook:
 
 ```sh
 #!/usr/bin/env sh
-fmf || exit 1
+fmf
 ```
 
 ## License
