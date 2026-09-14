@@ -92,7 +92,11 @@ mod tests {
     #[test]
     fn excluded_fields_are_not_checked() {
         let content = "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\n---\n\nContent.\n";
-        let excluded = vec!["lang".to_string(), "tags".to_string()];
+        let excluded = vec![
+            "lang".to_string(),
+            "tags".to_string(),
+            "author-email".to_string(),
+        ];
         let diags = fm::check_frontmatter(content, &excluded);
         assert!(diags.is_empty());
     }

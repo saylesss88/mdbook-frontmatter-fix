@@ -72,6 +72,12 @@ pub fn check_frontmatter(content: &str, excluded: &[String]) -> Vec<Diagnostic> 
             message: "frontmatter has no 'author' field".to_string(),
         });
     }
+    if !excluded.contains(&"author-email".to_string()) && !has_field(yaml, "author-email") {
+        diags.push(Diagnostic {
+            code: "fm::missing-author-email",
+            message: "frontmatter has no 'author-email' field".to_string(),
+        });
+    }
     if !excluded.contains(&"title".to_string()) && !has_field(yaml, "title") {
         diags.push(Diagnostic {
             code: "fm::missing-title",
@@ -156,8 +162,7 @@ mod tests {
     }
     #[test]
     fn missing_date_produces_diagnostic() {
-        let content =
-            "---\ntitle: Hello\nauthor: Jr\nlang: en\ntags:\n -blog\n---\n\nSome content.\n";
+        let content = "---\ntitle: Hello\nauthor: Jr\nlang: en\ntags:\n -blog\nauthor-email: example@example.com\n---\n\nSome content.\n";
         let diags = check_frontmatter(content, &[]);
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].code, "fm::missing-date");
@@ -165,8 +170,7 @@ mod tests {
 
     #[test]
     fn missing_author_produces_diagnostic() {
-        let content =
-            "---\ntitle: Hello\ndate: 2026-09-03\nlang: en\ntags:\n -blog\n---\n\nSome content.\n";
+        let content = "---\ntitle: Hello\ndate: 2026-09-03\nlang: en\ntags:\n -blog\nauthor-email: example@example.com\n---\n\nSome content.\n";
         let diags = check_frontmatter(content, &[]);
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].code, "fm::missing-author");
@@ -174,8 +178,7 @@ mod tests {
 
     #[test]
     fn missing_title_produces_diagnostic() {
-        let content =
-            "---\nauthor: Jr\ndate: 2026-09-03\nlang: en\ntags:\n -blog\n---\n\nSome content.\n";
+        let content = "---\nauthor: Jr\ndate: 2026-09-03\nlang: en\ntags:\n -blog\nauthor-email: example@example.com\n---\n\nSome content.\n";
         let diags = check_frontmatter(content, &[]);
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].code, "fm::missing-title");
@@ -183,7 +186,7 @@ mod tests {
 
     #[test]
     fn valid_frontmatter_produces_no_diagnostics() {
-        let content = "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\nlang: en\ntags:\n -blog\n---\n\nSome content.\n";
+        let content = "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\nlang: en\ntags:\n -blog\nauthor-email: example@example.com\n---\n\nSome content.\n";
         let diags = check_frontmatter(content, &[]);
         assert!(diags.is_empty());
     }
@@ -221,7 +224,7 @@ mod tests {
 
     #[test]
     fn missing_lang_produces_diagnostic() {
-        let content = "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\ntags:\n -blog\n---\n\nSome content.\n";
+        let content = "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\ntags:\n  - io\nauthor-email: example@example.com\n---\n\nSome content.\n";
         let diags = check_frontmatter(content, &[]);
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].code, "fm::missing-lang");
@@ -229,8 +232,7 @@ mod tests {
 
     #[test]
     fn missing_tags_produces_diagnostic() {
-        let content =
-            "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\nlang: en\n---\n\nSome content.\n";
+        let content = "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\nlang: en\nauthor-email: example@example.com\n---\n\nSome content.\n";
         let diags = check_frontmatter(content, &[]);
         assert_eq!(diags.len(), 1);
         assert_eq!(diags[0].code, "fm::missing-tags");
@@ -238,8 +240,7 @@ mod tests {
 
     #[test]
     fn fix_missing_tags_injects_into_existing_frontmatter() {
-        let content =
-            "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\nlang: en\n---\n\nSome content.\n";
+        let content = "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\nlang: en\nauthor-email: example@example.com\n---\n\nSome content.\n";
         let tags = vec!["blog".to_string(), "rust".to_string()];
         let fixed = fix_missing_tags(content, &tags);
         assert!(fixed.contains("tags:"));
@@ -279,5 +280,12 @@ mod tests {
         let stripped = mdbook_frontmatter_strip::strip_frontmatter(content);
         assert_eq!(stripped, "Some content.\n");
         assert!(!stripped.contains("---"));
+    }
+
+    #[test]
+    fn missing_author_email_produces_diagnostic() {
+        let content = "---\ntitle: Hello\nauthor: Jr\ndate: 2026-09-03\nlang: en\ntags:\n  - io\n---\n\nContent.\n";
+        let diags = check_frontmatter(content, &[]);
+        assert!(diags.iter().any(|d| d.code == "fm::missing-author-email"));
     }
 }
