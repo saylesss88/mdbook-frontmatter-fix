@@ -64,9 +64,15 @@ pub fn check_links(content: &str, file_dir: &Path) -> Vec<Diagnostic> {
         let mut rest = line;
         while let Some(start) = rest.find("](") {
             rest = &rest[start + 2..];
-            let Some(end) = rest.find(')') else { break };
+            let Some(end) = rest.rfind(')') else { break };
             let target = &rest[..end];
             rest = &rest[end + 1..];
+            // Strip angle bracket wrapper: <url> -> url
+            let target = if target.starts_with('<') && target.ends_with('>') {
+                &target[1..target.len() - 1]
+            } else {
+                target
+            };
 
             // Skip external links and anchors
             if target.starts_with("http") || target.starts_with('#') || target.is_empty() {
@@ -174,6 +180,22 @@ mod tests {
         std::fs::write(&file, "body { color: red; }").unwrap();
         let content = "{{#include style.css:25:29}}\n";
         let diags = check_includes(content, dir.path());
+        assert!(diags.is_empty());
+    }
+
+    #[test]
+    fn autolinks_are_skipped() {
+        let dir = tempfile::tempdir().unwrap();
+        let content = "See <https://en.wikipedia.org/wiki/Entropy_(computing)> for more.\n";
+        let diags = check_links(content, dir.path());
+        assert!(diags.is_empty());
+    }
+
+    #[test]
+    fn angle_bracket_links_are_skipped() {
+        let dir = tempfile::tempdir().unwrap();
+        let content = "- [Wikipedia](<https://en.wikipedia.org/wiki/Entropy_(computing)>)\n";
+        let diags = check_links(content, dir.path());
         assert!(diags.is_empty());
     }
 }
