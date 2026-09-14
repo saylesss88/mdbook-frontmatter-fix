@@ -67,6 +67,9 @@ pub fn check_links(content: &str, file_dir: &Path) -> Vec<Diagnostic> {
             let Some(end) = rest.rfind(')') else { break };
             let target = &rest[..end];
             rest = &rest[end + 1..];
+            if target.contains(')') {
+                continue;
+            }
             // Strip angle bracket wrapper: <url> -> url
             let target = if target.starts_with('<') && target.ends_with('>') {
                 &target[1..target.len() - 1]
@@ -195,6 +198,14 @@ mod tests {
     fn angle_bracket_links_are_skipped() {
         let dir = tempfile::tempdir().unwrap();
         let content = "- [Wikipedia](<https://en.wikipedia.org/wiki/Entropy_(computing)>)\n";
+        let diags = check_links(content, dir.path());
+        assert!(diags.is_empty());
+    }
+
+    #[test]
+    fn image_badge_links_are_skipped() {
+        let dir = tempfile::tempdir().unwrap();
+        let content = "[![Alt](./assets/badge.svg) On GitLab](https://gitlab.com/user/repo)\n";
         let diags = check_links(content, dir.path());
         assert!(diags.is_empty());
     }
