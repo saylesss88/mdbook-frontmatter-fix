@@ -394,8 +394,8 @@ frontmatter in CI:
 Or as a pre-commit hook:
 
 ```sh
-#!/bin/sh
-fmf || exit 1
+#!/usr/bin/env sh
+fmf
 ```
 
 ## License
