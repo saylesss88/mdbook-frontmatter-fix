@@ -5,15 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.0] - 2026-09-13
+## [0.5.0] - 2026-09-14
 
 ### Added
 - **(comment)**add Bluesky comment style with bluesky-comments web component
 
 ### Fixed
+- **(main)**handle --fix flag for single file in handle_file_command
+- **(html)**handle angle bracket URLs and use rfind for closing paren in check_links
+- **(html)**strip line range suffix from include paths before checking existence
+- **(main)**unnecessary calls of to_string(), clippy suggestion yesterday
+- **(toc)**strip HTML tags and emojis from anchor generation
 - **(README)**wrong install instructions
 
-## [0.4.0] - 2026-09-13
+## [0.4.0] - 2026-09-14
 
 ### Added
 - **(main)**add injected fields
@@ -42,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **(main)**check --strip before --toc & --comment in handle_file_command
 - **(main)**skip injecting Comments block into README.md
 
-## [0.3.0] - 2026-09-13
+## [0.3.0] - 2026-09-14
 
 ### Added
 - **(main)**wire in --toc for all chapters at once
@@ -53,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **(toc)**add inject_toc to insert table of contents after frontmatter
 - **(toc)**add nested heading support with indentation for h3
 
-## [0.2.0] - 2026-09-13
+## [0.2.0] - 2026-09-14
 
 ### Added
 - **(main)**add --strip flag to remove frontmatter from one or all chapters
@@ -68,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **(main)**trim body content, just show what's being stripped with --strip
 
-## [0.1.0] - 2026-09-13
+## [0.1.0] - 2026-09-14
 
 ### Added
 - **(main)**respect exclude_fields when injecting frontmatter with --fix
