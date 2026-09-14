@@ -396,7 +396,7 @@ frontmatter in CI:
 Or as a pre-commit hook:
 
 ```sh
-#!/bin/sh
+#!/usr/bin/env sh
 fmf || exit 1
 ```
 
