@@ -20,10 +20,14 @@ pub fn generate_toc(content: &str) -> String {
     entries
         .iter()
         .map(|(level, title)| {
-            let anchor = title
+            let clean = strip_html(title);
+            let anchor = clean
+                .trim()
                 .to_lowercase()
                 .replace(' ', "-")
-                .replace(|c: char| !c.is_alphanumeric() && c != '-', "");
+                .replace(|c: char| !c.is_alphanumeric() && c != '-', "")
+                .trim_matches('-')
+                .to_string();
 
             let indent = "  ".repeat(level - min_level);
             format!("{indent}- [{title}](#{anchor})")
@@ -88,6 +92,20 @@ pub fn strip_toc(content: &str) -> String {
     result.join("\n")
 }
 
+fn strip_html(s: &str) -> String {
+    let mut result = String::new();
+    let mut in_tag = false;
+    for c in s.chars() {
+        match c {
+            '<' => in_tag = true,
+            '>' => in_tag = false,
+            _ if !in_tag => result.push(c),
+            _ => {}
+        }
+    }
+    result
+}
+
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
@@ -145,5 +163,14 @@ mod tests {
         assert!(!result.contains("## Table of Contents"));
         assert!(result.contains("## First"));
         assert!(result.contains("Content."));
+    }
+
+    #[test]
+    fn strips_html_tags_from_anchor() {
+        let content = "## <span aria-hidden=\"true\">🤏</span> Almost no one contribute\n";
+        let toc = generate_toc(content);
+        assert!(toc.contains("- ["));
+        assert!(!toc.contains("span-aria"));
+        assert!(toc.contains("#almost-no-one-contribute"));
     }
 }
